@@ -107,8 +107,33 @@ DeclList  :    DeclList Decl        { ($$=$1)->Append($2); }
           |    Decl                 { ($$ = new List<Decl*>)->Append($1); }
           ;
 
-Decl      :    T_Void               { /* pp2: replace with correct rules  */ } 
+Decl      :    VarArch              { $$=$1; }
+		  |	   FuncArch				{ $$=$1; }
+		  |	   ClassArch			{ $$=$1; }
+		  |	   InterfaceArch			{ $$=$1; }	   
           ;
+
+VarArch	  :	   VarSpec ';'
+		  ;
+
+VarSpec   :	   VarType T_Identifier	{}
+		  ;
+
+VarType	  :	   T_Bool
+		  |	   T_Int
+		  |	   T_Double
+		  |	   T_String
+		  ;
+
+FuncArch  :	   
+		  ;
+
+ClassArch :
+		  ;
+
+InterfaceArch	:
+				;
+
           
 
 
