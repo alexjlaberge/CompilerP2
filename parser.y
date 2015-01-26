@@ -46,6 +46,7 @@ void yyerror(const char *msg); // standard error-handling routine
     char identifier[MaxIdentLen+1]; // +1 for terminating null
     Decl *decl;
     List<Decl*> *declList;
+    Type *type;
 }
 
 
@@ -83,6 +84,7 @@ void yyerror(const char *msg); // standard error-handling routine
  */
 %type <declList>  DeclList 
 %type <decl>      Decl
+%type <type>	  Type
 
 %%
 /* Rules
@@ -107,31 +109,31 @@ DeclList  :    DeclList Decl        { ($$=$1)->Append($2); }
           |    Decl                 { ($$ = new List<Decl*>)->Append($1); }
           ;
 
-Decl      :    VarArch              { $$=$1; }
-		  |	   FuncArch				{ $$=$1; }
-		  |	   ClassArch			{ $$=$1; }
-		  |	   InterfaceArch			{ $$=$1; }	   
+Decl      :    VarDecl              { $$=$1; }
+		  |	   FuncDecl				{ $$=$1; }
+		  |	   ClassDecl			{ $$=$1; }
+		  |	   InterfaceDecl			{ $$=$1; }	   
           ;
 
-VarArch	  :	   VarSpec ';'
+VarDecl	  :	   Var ';'			{}
 		  ;
 
-VarSpec   :	   VarType T_Identifier	{}
+Var   	  :	   VarType T_Identifier	{$$ = new Identifier;}
 		  ;
 
-VarType	  :	   T_Bool
-		  |	   T_Int
-		  |	   T_Double
-		  |	   T_String
+Type	  :	   T_Bool 				{$$ = new Type("bool")}
+		  |	   T_Int 				{$$ = new Type("int")}
+		  |	   T_Double 			{$$ = new Type("double")}
+		  |	   T_String 			{$$ = new Type("string")}
 		  ;
 
-FuncArch  :	   
+FnDecl  :		T_Return	   		{}
 		  ;
 
-ClassArch :
+ClassDecl :		T_Return  			{}
 		  ;
 
-InterfaceArch	:
+InterfaceDecl	:	T_Return		{}
 				;
 
           
