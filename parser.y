@@ -47,6 +47,11 @@ void yyerror(const char *msg); // standard error-handling routine
     Decl *decl;
     List<Decl*> *declList;
     Type *type;
+    VarDecl *varDecl;
+    List<VarDecl*> *varList;
+    ClassDecl *classDecl;
+    InterfaceDecl *interfaceDecl;
+    FnDecl *fnDecl;
 }
 
 
@@ -82,9 +87,15 @@ void yyerror(const char *msg); // standard error-handling routine
  * of the union named "declList" which is of type List<Decl*>.
  * pp2: You'll need to add many of these of your own.
  */
-%type <declList>  DeclList 
+%type <declList>  DeclList
+%type <varList>	  VarList 
 %type <decl>      Decl
 %type <type>	  Type
+%type <varDecl>	  VarDecl
+%type <varDecl>	  Var
+%type <varDecl> InterfaceDecl
+%type <varDecl> ClassDecl
+%type <fnDecl> FnDecl
 
 %%
 /* Rules
@@ -110,31 +121,41 @@ DeclList  :    DeclList Decl        { ($$=$1)->Append($2); }
           ;
 
 Decl      :    VarDecl              { $$=$1; }
-		  |	   FuncDecl				{ $$=$1; }
+		  |	   FnDecl				{ $$=$1; }
 		  |	   ClassDecl			{ $$=$1; }
-		  |	   InterfaceDecl			{ $$=$1; }	   
+		  |	   InterfaceDecl		{ $$=$1; }	
           ;
 
-VarDecl	  :	   Var ';'			{}
+VarDecl	  :	   Var	';'			{ $$=$1; }
 		  ;
 
-Var   	  :	   VarType T_Identifier	{$$ = new Identifier;}
+VarList	  :	   VarList ',' Var 			{ ($$=$1)->Append($3); }
+		  |	   Var                  {($$ = new List<VarDecl*>)->Append($1);}   
+
+Var   	  :	   Type T_Identifier	{
+									 	$$ = new VarDecl(new Identifier(@2,$2),$1); 
+									}
 		  ;
 
-Type	  :	   T_Bool 				{$$ = new Type("bool")}
-		  |	   T_Int 				{$$ = new Type("int")}
-		  |	   T_Double 			{$$ = new Type("double")}
-		  |	   T_String 			{$$ = new Type("string")}
+Type	  :	   T_Bool 				{$$ = new Type("bool");}
+		  |	   T_Int 				{$$ = new Type("int");}
+		  |	   T_Double 			{$$ = new Type("double");}
+		  |	   T_String 			{$$ = new Type("string");}
+		  |	   T_Null 				{$$ = new Type("null");}
+		  |	   T_Void 				{$$ = new Type("void");}
+
 		  ;
 
-FnDecl  :		T_Return	   		{}
+ClassDecl :	   Var	';'			{ $$=$1; }
 		  ;
 
-ClassDecl :		T_Return  			{}
+InterfaceDecl:	   Var	';'			{ $$=$1; }
 		  ;
 
-InterfaceDecl	:	T_Return		{}
-				;
+
+FnDecl	  :	Type T_Identifier '(' VarList ')' 		{ $$ = new FnDecl(new Identifier(@2,$2), $1, $4); }
+		  ;
+
 
           
 
