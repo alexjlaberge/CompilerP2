@@ -52,6 +52,9 @@ void yyerror(const char *msg); // standard error-handling routine
     ClassDecl *classDecl;
     InterfaceDecl *interfaceDecl;
     FnDecl *fnDecl;
+    StmtBlock *stmtBlock;
+    Stmt *stmt;
+    List<Stmt*> *stmtList;
 }
 
 
@@ -96,6 +99,17 @@ void yyerror(const char *msg); // standard error-handling routine
 %type <varDecl> InterfaceDecl
 %type <varDecl> ClassDecl
 %type <fnDecl> FnDecl
+%type <stmtBlock> StmtBlock
+%type <stmtList> StmtList
+%type <stmt> Stmt
+%type <stmt> ConditionalStmt
+%type <stmt> LoopStmt
+%type <stmt> ForStmt
+%type <stmt> WhileStmt
+%type <stmt> IfStmt
+%type <stmt> BreakStmt
+%type <stmt> ReturnStmt
+%type <stmt> PrintStmt
 
 %%
 /* Rules
@@ -153,12 +167,47 @@ InterfaceDecl:	   Var	';'			{ $$=$1; }
 		  ;
 
 
-FnDecl	  :	Type T_Identifier '(' VarList ')' 		{ $$ = new FnDecl(new Identifier(@2,$2), $1, $4); }
+FnDecl	  :	Type T_Identifier '(' VarList ')' '{' StmtBlock '}'		{ $$ = new FnDecl(new Identifier(@2,$2), $1, $4); }
 		  ;
 
+StmtBlock : stmtList 				{}
+		  | varList 				{}
+		  ;
 
-          
+StmtList  : StmtList Stmt 			{}
+		  | Stmt 					{}
+		  ;
 
+Stmt   	  : ConditionalStmt			{}
+		  | LoopStmt 				{}
+		  | BreakStmt  				{}
+		  | ReturnStmt   			{}
+		  | PrintStmt  				{}
+		  | Expr 					{}
+		  ;
+
+ConditionalStmt	: IfStmt 			{}
+				| LoopStmt			{}
+				;
+
+LoopStmt  : WhileStmt 				{}
+		  | ForStmt 				{}
+		  | WhileStmt  				{}
+		  ;
+
+Expr 	  : IntConstant 			{}
+		  | DoubleConstant 			{}
+		  | BoolConstant  			{}
+		  | StringConstant  		{}
+		  | NullConstant  			{}
+		  | CompoundExpr  			{}
+		  | LValue  				{}
+		  | This 					{}
+		  | Call  					{}
+		  | NewExpr 				{}
+		  | NewArrayExpr 			{}
+		  | ReadIntegerExpr 		{}
+		  | ReadLineExpr 			{}
 
 %%
 
