@@ -55,6 +55,7 @@ void yyerror(const char *msg); // standard error-handling routine
     StmtBlock *stmtBlock;
     Stmt *stmt;
     List<Stmt*> *stmtList;
+    Expr *expr;
 }
 
 
@@ -110,6 +111,7 @@ void yyerror(const char *msg); // standard error-handling routine
 %type <stmt> BreakStmt
 %type <stmt> ReturnStmt
 %type <stmt> PrintStmt
+%type <expr> Expr
 
 %%
 /* Rules
@@ -170,44 +172,74 @@ InterfaceDecl:	   Var	';'			{ $$=$1; }
 FnDecl	  :	Type T_Identifier '(' VarList ')' '{' StmtBlock '}'		{ $$ = new FnDecl(new Identifier(@2,$2), $1, $4); }
 		  ;
 
-StmtBlock : stmtList 				{}
-		  | varList 				{}
+StmtBlock : stmtList 				{$$=$1;}
+		  | varList 				{$$=$1;}
 		  ;
 
-StmtList  : StmtList Stmt 			{}
-		  | Stmt 					{}
+StmtList  : StmtList Stmt 			{($$=$1)->Append($2);}
+		  | Stmt 					{($$ = new List<VarDecl*>)->Append($1);}
 		  ;
 
-Stmt   	  : ConditionalStmt			{}
-		  | LoopStmt 				{}
-		  | BreakStmt  				{}
-		  | ReturnStmt   			{}
-		  | PrintStmt  				{}
-		  | Expr 					{}
+Stmt   	  : ConditionalStmt			{$$=$1;}
+		  | LoopStmt 				{$$=$1;}
+		  | BreakStmt  				{$$=$1;}
+		  | ReturnStmt   			{$$=$1;}
+		  | PrintStmt  				{$$=$1;}
+		  | Expr 					{$$=$1;}
 		  ;
 
-ConditionalStmt	: IfStmt 			{}
-				| LoopStmt			{}
+PrintStmt : T_Print '(' StmtList ')' ';' {$$= new PrintStmt($3);}
+		  ;
+
+BreakStmt : T_Break ';' 			{$$= new BreakStmt($1);}
+		  ;
+
+ReturnStmt : T_Return Expr ';' 		{$$= new ReturnStmt(@1, $2);}
+		  ;
+
+
+ConditionalStmt	: IfStmt 			{$$=$1;}
+				| LoopStmt			{$$=$1;}
 				;
 
-LoopStmt  : WhileStmt 				{}
-		  | ForStmt 				{}
-		  | WhileStmt  				{}
+IfStmt	  : T_If '(' Expr ')' '{' StmtBlock '}' T_Else '{' StmtBlock '}' {$$ = new IfStmt($3, $6, $10);}
+
+LoopStmt  : WhileStmt 				{$$=$1;}
+		  | ForStmt 				{$$=$1;}
 		  ;
 
-Expr 	  : IntConstant 			{}
-		  | DoubleConstant 			{}
-		  | BoolConstant  			{}
-		  | StringConstant  		{}
-		  | NullConstant  			{}
-		  | CompoundExpr  			{}
-		  | LValue  				{}
-		  | This 					{}
-		  | Call  					{}
-		  | NewExpr 				{}
-		  | NewArrayExpr 			{}
-		  | ReadIntegerExpr 		{}
-		  | ReadLineExpr 			{}
+WhileStmt : T_While '(' Expr ')' Stmt 		{$$= new WhileStmt($3, $5);}
+		  | T_While '(' Expr ')' '{' StmtBlock '}' {$$= new WhileStmt($3, $6);}
+		  ;
+
+ForStmt : T_For '(' Expr Expr Expr ')' Stmt 		{$$= new ForStmt($3, $4, $5, $7);}
+		| T_For '(' Expr Expr Expr ')' '{' StmtBlock '}' {$$= new ForStmt($3, $4, $5, $8);} 
+		  ;
+
+Expr 	  : T_IntConstant 			{$$= new IntConstant(@1,$1);}
+		  | T_DoubleConstant 		{$$= new DoubleConstant(@1,$1);}
+		  | T_BoolConstant  		{$$= new BoolConstant(@1,$1);}
+		  | T_StringConstant  		{$$= new StringConstant(@1, $1);}
+		  | T_Null  				{$$= new NullConstant(@1);}
+		  | CompoundExpr  			{$$=$1}
+		  | LValue  				{$$=$1}
+		  | T_This 					{$$= new This(@1);}
+		  | Call  					{$$=$1}
+		  | NewExpr 				{$$=$1}
+		  | NewArrayExpr 			{$$=$1}
+		  | T_ReadInteger '(' ')'	{$$= new ReadInteger(@1);}
+		  | T_ReadLine '(' ')'		{$$= new ReadLine(@1);}
+		  | Expr ';'				{$$ = $1;}
+		  ;
+
+CompoundExpr : ArithmeticExpr
+			 | RelationalExpr
+			 | EqualityExpr
+			 | LogicalExpr
+			 | AssignExpr
+
+LValue
+
 
 %%
 
