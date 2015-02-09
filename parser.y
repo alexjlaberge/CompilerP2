@@ -146,7 +146,8 @@ VarDecl	  :	   Var	';'			{ $$=$1; }
 		  ;
 
 VarList	  :	   VarList ',' Var 			{ ($$=$1)->Append($3); }
-		  |	   Var                  {($$ = new List<VarDecl*>)->Append($1);}   
+		  |	   Var                  {($$ = new List<VarDecl*>)->Append($1);}
+          ;   
 
 Var   	  :	   Type T_Identifier	{
 									 	$$ = new VarDecl(new Identifier(@2,$2),$1); 
@@ -159,36 +160,76 @@ Type	  :	   T_Bool 				{$$ = new Type("bool");}
 		  |	   T_String 			{$$ = new Type("string");}
 		  |	   T_Null 				{$$ = new Type("null");}
 		  |	   T_Void 				{$$ = new Type("void");}
-
+          |    NamedType            {$$ = $1;}
+          |    ArrayType            {$$ = $1;}
 		  ;
 
-ClassDecl :	   Var	';'			{ $$=$1; }
+NamedType:     T_Identifier         {$$ = new NamedType(new Identifier(@1,$1));}
+         ;
+
+ArrayType:     Type '[' ']'         {$$ = new ArrayType(@1, $1);}
+         ;
+
+ClassDecl :    T_Class Identifier ClassArgs '{' FieldList '}'    {}
 		  ;
 
-InterfaceDecl:	   Var	';'			{ $$=$1; }
-		  ;
+ClassArgs :    T_Extends Identifier {}
+          |    T_Implements IdentifierList {}
+          |    T_Extends Identifier T_Implements IdentifierList {}
+          |
+          ;
+
+FieldList :    FieldList Field {($$=$1)->Append($2);}
+          |    Field {($$ = new List<Field*>)->Append($1);}
+          |
+          ;
+
+Field     :    VariableDecl     {$$=$1;}
+          |    FunctionDecl     {$$=$1;}
+          ;
 
 
-FnDecl	  :	Type T_Identifier '(' VarList ')' '{' StmtBlock '}'		{ $$ = new FnDecl(new Identifier(@2,$2), $1, $4); }
+IdentifierList: IdentifierList ',' Identifier   {($$=$1)->Append($3);}
+              | Identifier                      {($$ = new List<Identifier*>)->Append($1);}
+              ;
+
+Identifier: T_Identifier {$$ = new Identifier(@1, $1);}
+
+InterfaceDecl: T_Interface Identifier '{' PrototypeList '}' {}
 		  ;
 
-StmtBlock : stmtList 				{$$=$1;}
-		  | varList 				{$$=$1;}
+PrototypeList: PrototypeList Prototype {}
+             | Prototype {}
+             ;
+
+Prototype    : Type Identifier '(' Formals ')' ';' {}
+            ;
+
+FnDecl	  :	Type T_Identifier '(' Formals ')' StmtBlock		{ $$ = new FnDecl(new Identifier(@2,$2), $1, $4); }
 		  ;
+
+Formals   : VarList                 {$$ = $1}
+          | ;
+
+StmtBlock : '{' VarDeclList StmtList '}' 				{$$=$1;}
+		  ;
+
+VarDeclList: VarDeclList VarDecl {($$=$1)->Append($2);}
+            | VarDecl            {($$ = new List<VarDecl*>)->Append($1);}
 
 StmtList  : StmtList Stmt 			{($$=$1)->Append($2);}
 		  | Stmt 					{($$ = new List<VarDecl*>)->Append($1);}
 		  ;
 
 Stmt   	  : ConditionalStmt			{$$=$1;}
-		  | LoopStmt 				{$$=$1;}
 		  | BreakStmt  				{$$=$1;}
 		  | ReturnStmt   			{$$=$1;}
 		  | PrintStmt  				{$$=$1;}
-		  | Expr 					{$$=$1;}
+		  | Expr ;					{$$=$1;}
+          | StmtBlock               {$$ = $1;}
 		  ;
 
-PrintStmt : T_Print '(' StmtList ')' ';' {$$= new PrintStmt($3);}
+PrintStmt : T_Print '(' ExprList ')' ';' {$$= new PrintStmt($3);}
 		  ;
 
 BreakStmt : T_Break ';' 			{$$= new BreakStmt($1);}
@@ -202,18 +243,17 @@ ConditionalStmt	: IfStmt 			{$$=$1;}
 				| LoopStmt			{$$=$1;}
 				;
 
-IfStmt	  : T_If '(' Expr ')' '{' StmtBlock '}' T_Else '{' StmtBlock '}' {$$ = new IfStmt($3, $6, $10);}
+IfStmt	  : T_If '(' Expr ')' Stmt T_Else Stmt {$$ = new IfStmt($3, $6, $10);}
+          | T_If '(' Expr ')' Stmt {}
 
 LoopStmt  : WhileStmt 				{$$=$1;}
 		  | ForStmt 				{$$=$1;}
 		  ;
 
 WhileStmt : T_While '(' Expr ')' Stmt 		{$$= new WhileStmt($3, $5);}
-		  | T_While '(' Expr ')' '{' StmtBlock '}' {$$= new WhileStmt($3, $6);}
 		  ;
 
-ForStmt : T_For '(' Expr Expr Expr ')' Stmt 		{$$= new ForStmt($3, $4, $5, $7);}
-		| T_For '(' Expr Expr Expr ')' '{' StmtBlock '}' {$$= new ForStmt($3, $4, $5, $8);} 
+ForStmt : T_For '(' Expr ';' Expr ';' Expr ')' Stmt 		{$$= new ForStmt($3, $5, $7, $9);} 
 		  ;
 
 Expr 	  : T_IntConstant 			{$$= new IntConstant(@1,$1);}
@@ -227,11 +267,14 @@ Expr 	  : T_IntConstant 			{$$= new IntConstant(@1,$1);}
 		  | Call  					{$$=$1}
 		  | T_ReadInteger '(' ')'	{$$= new ReadInteger(@1);}
 		  | T_ReadLine '(' ')'		{$$= new ReadLine(@1);}
-		  | Expr ';'				{$$ = $1;}
 		  | '(' Expr ')'			{$$ = $1;}
 		  | T_NewArray '(' Expr ',' Type ')' {$$ = new NewArrayExpr(@1, $3, $5);}
-		  | T_New '(' T_Identifier ')' {$$ = new NewExpr}
+		  | T_New '(' Identifier ')' {$$ = new NewExpr}
+		  | LValue '=' Expr 		{$$ = $1;}
  		  ;
+
+ExprList  : ExprList ',' Expr       {}
+          | Expr                    {}
 
 CompoundExpr : ArithmeticExpr		{$$=$1;}
 			 | RelationalExpr		{$$=$1;}
@@ -304,12 +347,18 @@ EqualityExpr : Expr T_And Expr 				{
 											}
 			 ;
 
-LValue	  : T_Identifier
-		  | Expr '.' T_Identifier
-		  | Expr '[' Expr ']'
-		  | LValue '=' Expr
+LValue	  : Identifier       {}
+		  | Expr '.' Identifier {}
+		  | Expr '[' Expr ']' {}
 		  ;
 
+Call: Identifier '(' Actuals ')'        {}
+    | Expr '.' Identifier '(' Actuals ')'   {}
+    ;
+
+Actuals: ExprList   {}
+        |           {}
+        ;
 
 %%
 
