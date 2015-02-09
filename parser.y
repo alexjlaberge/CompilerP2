@@ -80,7 +80,7 @@ void yyerror(const char *msg); // standard error-handling routine
 %token   T_Increm T_Decrem T_Switch T_Case T_Default
 
 
-/* Non-terminal types
+/* Non-terminal types/
  * ------------------
  * In order for yacc to assign/access the correct field of $$, $1, we
  * must to declare which field is appropriate for the non-terminal.
@@ -225,20 +225,90 @@ Expr 	  : T_IntConstant 			{$$= new IntConstant(@1,$1);}
 		  | LValue  				{$$=$1}
 		  | T_This 					{$$= new This(@1);}
 		  | Call  					{$$=$1}
-		  | NewExpr 				{$$=$1}
-		  | NewArrayExpr 			{$$=$1}
 		  | T_ReadInteger '(' ')'	{$$= new ReadInteger(@1);}
 		  | T_ReadLine '(' ')'		{$$= new ReadLine(@1);}
 		  | Expr ';'				{$$ = $1;}
+		  | '(' Expr ')'			{$$ = $1;}
+		  | T_NewArray '(' Expr ',' Type ')' {$$ = new NewArrayExpr(@1, $3, $5);}
+		  | T_New '(' T_Identifier ')' {$$ = new NewExpr}
+ 		  ;
+
+CompoundExpr : ArithmeticExpr		{$$=$1;}
+			 | RelationalExpr		{$$=$1;}
+			 | EqualityExpr			{$$=$1;}
+			 | LogicalExpr			{$$=$1;}
+			 | AssignExpr			{$$=$1;}
+			 ;
+
+ArithmeticExpr: Expr '+' Expr 		{
+										Operator *op = new Operator(@2, $2);
+										$$ = new ArithmeticExp($1, op, $3);
+									}
+			  | Expr '-' Expr 		{
+										Operator *op = new Operator(@2, $2);
+										$$ = new ArithmeticExp($1, op, $3);
+									}
+			  | Expr '*' Expr 		{
+										Operator *op = new Operator(@2, $2);
+										$$ = new ArithmeticExp($1, op, $3);
+									}
+			  | Expr '/' Expr 		{
+										Operator *op = new Operator(@2, $2);
+										$$ = new ArithmeticExp($1, op, $3);
+									}
+			  | Expr '%' Expr 		{
+										Operator *op = new Operator(@2, $2);
+										$$ = new ArithmeticExp($1, op, $3);
+									}
+			  | '-' Expr 			{
+										Operator *op = new Operator(@1, $1);
+										$$ = new ArithmeticExp(op, $2);
+									}
+			  ;
+
+RelationalExpr: Expr '>' Expr 				{
+												Operator *op = new Operator(@2, $2);
+												$$ = new RelationalExp($1, op, $3);
+											}
+			  | Expr '<' Expr 				{
+												Operator *op = new Operator(@2, $2);
+												$$ = new RelationalExp($1, op, $3);
+											}
+			  | Expr T_GreaterEqual Expr 	{
+												Operator *op = new Operator(@2, $2);
+												$$ = new RelationalExp($1, op, $3);
+											}
+			  | Expr T_LessEqual Expr 		{
+												Operator *op = new Operator(@2, $2);
+												$$ = new RelationalExp($1, op, $3);
+											}
+			  ;
+
+EqualityExpr : Expr T_Equals Expr 			{
+												Operator *op = new Operator(@2, $2);
+												$$ = new RelationalExp($1, op, $3);
+											}
+			 | Expr T_NotEquals Expr 		{
+												Operator *op = new Operator(@2, $2);
+												$$ = new RelationalExp($1, op, $3);
+											}
+			 ;
+
+EqualityExpr : Expr T_And Expr 				{
+												Operator *op = new Operator(@2, $2);
+												$$ = new RelationalExp($1, op, $3);
+											}
+			 | Expr T_NotEquals Expr 		{
+												Operator *op = new Operator(@2, $2);
+												$$ = new RelationalExp($1, op, $3);
+											}
+			 ;
+
+LValue	  : T_Identifier
+		  | Expr '.' T_Identifier
+		  | Expr '[' Expr ']'
+		  | LValue '=' Expr
 		  ;
-
-CompoundExpr : ArithmeticExpr
-			 | RelationalExpr
-			 | EqualityExpr
-			 | LogicalExpr
-			 | AssignExpr
-
-LValue
 
 
 %%
