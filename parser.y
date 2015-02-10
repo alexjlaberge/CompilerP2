@@ -62,6 +62,7 @@ void yyerror(const char *msg); // standard error-handling routine
     Identifier *iden;
     StmtBlock *stmtBlock;
     NamedType *namedType;
+    PrintStmt *printStmt;
 }
 
 
@@ -116,7 +117,7 @@ void yyerror(const char *msg); // standard error-handling routine
 %type <stmt> IfStmt
 %type <stmt> BreakStmt
 %type <stmt> ReturnStmt
-%type <stmt> PrintStmt
+%type <printStmt> PrintStmt
 %type <expr> Expr
 %type <exprList> ExprList
 %type <exprList> Actuals
@@ -138,7 +139,6 @@ void yyerror(const char *msg); // standard error-handling routine
 %type <expr> LogicalExpr
 %type <expr> AssignExpr
 %type <declList> PrototypeList
-
 %%
 /* Rules
  * -----
@@ -196,10 +196,10 @@ NamedType:     Identifier         {$$ = new NamedType($1);}
 ArrayType:     Type '[' ']'         {$$ = new ArrayType(@1, $1);}
          ;
 
-ClassDecl :    T_Class Identifier T_Extends NamedType '{' FieldList '}'    {$$ = new ClassDecl($2, $4, NULL, $6);}
+ClassDecl :    T_Class Identifier T_Extends NamedType '{' FieldList '}'    {$$ = new ClassDecl($2, $4, new List<NamedType*>, $6);}
           |    T_Class Identifier T_Implements NamedTypeList '{' FieldList '}'    {$$ = new ClassDecl($2, NULL, $4, $6);}
           |    T_Class Identifier T_Extends NamedType T_Implements NamedTypeList '{' FieldList '}'    {$$ = new ClassDecl($2, $4, $6, $8);}
-          |    T_Class Identifier '{' FieldList '}'    {$$ = new ClassDecl($2, NULL, NULL, $4);}
+          |    T_Class Identifier '{' FieldList '}'    {$$ = new ClassDecl($2, NULL, new List<NamedType*>, $4);}
 		  ;
 
 
@@ -229,7 +229,7 @@ PrototypeList: PrototypeList Prototype {($$=$1)->Append($2);}
 Prototype    : Type Identifier '(' Formals ')' ';' {$$ = new FnDecl($2, $1, $4);}
             ;
 
-FnDecl	  :	Type T_Identifier '(' Formals ')' StmtBlock		{ $$ = new FnDecl(new Identifier(@2,$2), $1, $4); }
+FnDecl	  :	Type T_Identifier '(' Formals ')' StmtBlock		{ $$ = new FnDecl(new Identifier(@2,$2), $1, $4); $$->SetFunctionBody($6);}
 		  ;
 
 Formals   : VarList                 {$$ = $1;}
@@ -241,9 +241,12 @@ StmtBlock : '{' VarDeclList StmtList '}' 				{$$= new StmtBlock($2, $3);}
 
 VarDeclList: VarDeclList VarDecl {($$=$1)->Append($2);}
             | VarDecl            {($$ = new List<VarDecl*>)->Append($1);}
+            |                    {$$ = new List<VarDecl*>;}
+            ;
 
 StmtList  : StmtList Stmt 			{($$=$1)->Append($2);}
 		  | Stmt 					{($$ = new List<Stmt*>)->Append($1);}
+          |                         {$$ = new List<Stmt*>;}
 		  ;
 
 Stmt   	  : ConditionalStmt			{$$=$1;}
@@ -295,7 +298,6 @@ Expr 	  : T_IntConstant 			{$$= new IntConstant(@1,$1);}
 		  | '(' Expr ')'			{$$ = $2;}
 		  | T_NewArray '(' Expr ',' Type ')' {$$ = new NewArrayExpr(@1, $3, $5);}
 		  | T_New '(' NamedType ')' {$$ = new NewExpr(@1, $3);}
-		  | LValue '=' Expr 		{$$ = $1;}
  		  ;
 
 
