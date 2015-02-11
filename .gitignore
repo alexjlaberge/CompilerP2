@@ -1,0 +1,4 @@
+dcc
+*.o
+y.output
+y.tab.*
