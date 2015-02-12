@@ -251,11 +251,23 @@ StmtList  : StmtList Stmt 			{($$=$1)->Append($2);}
 
 Stmt   	  : ConditionalStmt			{$$=$1;}
 		  | BreakStmt  				{$$=$1;}
+          | SwitchStmt              {$$=$1;}
 		  | ReturnStmt   			{$$=$1;}
 		  | PrintStmt  				{$$=$1;}
 		  | Expr ';'				{$$=$1;}
           | StmtBlock               {$$ = $1;}
 		  ;
+
+SwitchStmt: T_Switch '(' Expr ')' CaseBlock {$$ = new SwitchStmt($3, $5);}
+
+CaseBlock: '{' CaseList Default '}'   {($$=$2)->append($3);}
+
+CaseList: CaseList Case {($$=$1)->Append($2);}
+        | Case {($$ = new List<Case*>)->Append($1);}
+
+Case: T_Case ':' StmtList {$$ = new Case($3);}
+
+Default : T_Default ':' StmtList {$$ = new Default();}
 
 PrintStmt : T_Print '(' ExprList ')' ';' {$$= new PrintStmt($3);}
 		  ;
@@ -264,6 +276,7 @@ BreakStmt : T_Break ';' 			{$$= new BreakStmt(@1);}
 		  ;
 
 ReturnStmt : T_Return Expr ';' 		{$$= new ReturnStmt(@1, $2);}
+           | T_Return ';'      {$$= new ReturnStmt(@1, new EmptyExpr());}
 		  ;
 
 
@@ -281,7 +294,10 @@ LoopStmt  : WhileStmt 				{$$=$1;}
 WhileStmt : T_While '(' Expr ')' Stmt 		{$$= new WhileStmt($3, $5);}
 		  ;
 
-ForStmt : T_For '(' Expr ';' Expr ';' Expr ')' Stmt 		{$$= new ForStmt($3, $5, $7, $9);} 
+ForStmt : T_For '(' Expr ';' Expr ';' Expr ')' Stmt         {$$= new ForStmt($3, $5, $7, $9);}
+        | T_For '(' ';' Expr ';' Expr ')' Stmt         {$$= new ForStmt(new EmptyExpr(), $4, $6, $8);}
+        | T_For '(' Expr ';' Expr ';' ')' Stmt         {$$= new ForStmt($3, $5, new EmptyExpr(), $8);}
+        | T_For '(' ';' Expr ';' ')' Stmt         {$$= new ForStmt(new EmptyExpr(), $4, new EmptyExpr(), $7);}
 		  ;
 
 Expr 	  : T_IntConstant 			{$$= new IntConstant(@1,$1);}
@@ -304,9 +320,9 @@ Expr 	  : T_IntConstant 			{$$= new IntConstant(@1,$1);}
 ExprList  : ExprList ',' Expr       {($$=$1)->Append($3);}
           | Expr                    {($$ = new List<Expr*>)->Append($1);}
 
-CompoundExpr : ArithmeticExpr		{$$=$1;}
+CompoundExpr : EqualityExpr         {$$=$1;}
 			 | RelationalExpr		{$$=$1;}
-			 | EqualityExpr			{$$=$1;}
+			 | ArithmeticExpr	    {$$=$1;}
 			 | LogicalExpr			{$$=$1;}
 			 | AssignExpr			{$$=$1;}
 			 ;

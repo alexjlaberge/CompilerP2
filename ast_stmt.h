@@ -127,5 +127,36 @@ class PrintStmt : public Stmt
     void PrintChildren(int indentLevel);
 };
 
+class SwitchStmt : public Stmt
+{
+  protected:
+    List<Case*> *cases;
+    Expr *expr;
+  public:
+    SwitchStmt(Expr *e, List<Case*> *c);
+    const char *GetPrintNameForNode() { return "SwitchStmt"; }
+    void PrintChildren(int indentLevel);
+}
+
+class Case : public Stmt
+{
+  protected:
+    List<Stmt*> *stmts
+  public:
+    SwitchStmt(List<Stmt*> s);
+    const char *GetPrintNameForNode() { return "Case"; }
+    void PrintChildren(int indentLevel);
+}
+
+class Default : public Stmt
+{
+  protected:
+    List<Stmt*> *stmts
+  public:
+    SwitchStmt(List<Stmt*> s);
+    const char *GetPrintNameForNode() { return "Default"; }
+    void PrintChildren(int indentLevel);
+}
+
 
 #endif
