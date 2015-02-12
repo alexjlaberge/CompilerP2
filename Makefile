@@ -64,7 +64,8 @@ $(PRECOMPILED):
 	@make --no-print-directory $*.c
 	$(CC) $(CFLAGS) -c -o $@ $*.c
 
-lex.yy.o: $(wildcard scanner.l)
+# The rule below is commented out as lex.yy.o is provided
+#lex.yy.o: $(wildcard scanner.l)
 lex.yy.c: scanner.l y.tab.h
 	$(LEX) $(LEXFLAGS) scanner.l
 
