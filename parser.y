@@ -103,6 +103,16 @@ void yyerror(const char *msg); // standard error-handling routine
  * of the union named "declList" which is of type List<Decl*>.
  * pp2: You'll need to add many of these of your own.
  */
+%nonassoc '='
+%left T_Or
+%left T_And
+%nonassoc T_Equal T_NotEqual
+%nonassoc '<' '>' T_GreaterEqual T_LessEqual
+%left '+' //'-'?
+%left '*' '/' '%'
+%left '!' '-'
+%nonassoc '[' '.'
+
 %type <declList>  DeclList
 %type <varList>	  VarList 
 %type <decl>      Decl
@@ -205,7 +215,7 @@ Type	  :	   T_Bool 				{$$ = new Type("bool");}
 NamedType:     Identifier         {$$ = new NamedType($1);}
          ;
 
-ArrayType:     Type '[' ']'         {$$ = new ArrayType(@1, $1);}
+ArrayType:     Type T_Dims         {$$ = new ArrayType(@1, $1);}
          ;
 
 ClassDecl :    T_Class Identifier T_Extends NamedType '{' FieldList '}'    {$$ = new ClassDecl($2, $4, new List<NamedType*>, $6);}
@@ -384,7 +394,7 @@ PostfixExpr: Expr T_Increm 			{
                                         Operator *op = new Operator(@2, "++");
                                         $$ = new PostfixExpr(op, $1);
                                     }
-           | Expr T_Increm 			{
+           | Expr T_Decrem 			{
                                         Operator *op = new Operator(@2, "--");
                                         $$ = new PostfixExpr(op, $1);
                                     }
@@ -425,6 +435,10 @@ LogicalExpr : Expr T_And Expr 				{
 			 | Expr T_Or Expr 		        {
 												Operator *op = new Operator(@2, "||");
 												$$ = new LogicalExpr($1, op, $3);
+											}
+			| '!' Expr 		        		{
+												Operator *op = new Operator(@1, "!");
+												$$ = new LogicalExpr(op, $2);
 											}
 			 ;
 
