@@ -112,6 +112,8 @@ void yyerror(const char *msg); // standard error-handling routine
 %left '*' '/' '%'
 %left '!' '-'
 %nonassoc '[' '.'
+%nonassoc No_Else
+%nonassoc T_Else
 
 %type <declList>  DeclList
 %type <varList>      VarList 
@@ -397,7 +399,23 @@ StmtBlock:
     '{' VarDeclList StmtList '}'                 
     {
         $$= new StmtBlock($2, $3);
+    } |
+
+    '{' VarDeclList '}'                 
+    {
+        $$= new StmtBlock($2, new List<Stmt*>);
+    } |
+
+    '{' StmtList '}'                 
+    {
+        $$= new StmtBlock(new List<VarDecl*>, $2);
+    } |
+    
+    '{' '}'                 
+    {
+        $$= new StmtBlock(new List<VarDecl*>, new List<Stmt*>);
     };
+
 
 VarDeclList: 
     VarDeclList VarDecl 
@@ -408,11 +426,6 @@ VarDeclList:
     VarDecl            
     {
         ($$ = new List<VarDecl*>)->Append($1);
-    } |
-
-    /*Empty*/                   
-    {
-        $$ = new List<VarDecl*>;
     };
 
 StmtList: 
@@ -424,11 +437,6 @@ StmtList:
     Stmt                     
     {
         ($$ = new List<Stmt*>)->Append($1);
-    } |
-
-    /*Empty*/                        
-    {
-        $$ = new List<Stmt*>;
     };
 
 Stmt: 
@@ -538,12 +546,12 @@ ConditionalStmt:
     };
 
 IfStmt: 
-    T_If '(' Expr ')' Stmt T_Else Stmt 
+    T_If '(' Expr ')' Stmt T_Else Stmt
     {
         $$ = new IfStmt($3, $5, $7);
     } |
 
-    T_If '(' Expr ')' Stmt 
+    T_If '(' Expr ')' Stmt %prec No_Else
     {
         $$ = new IfStmt($3, $5, NULL);
     };
@@ -719,7 +727,7 @@ ArithmeticExpr:
         $$ = new ArithmeticExpr($1, op, $3);
     } |
 
-    Expr '-' Expr         
+    Expr '-' Expr  %prec '+'      
     {
         Operator *op = new Operator(@2, "-");
         $$ = new ArithmeticExpr($1, op, $3);
@@ -743,7 +751,7 @@ ArithmeticExpr:
         $$ = new ArithmeticExpr($1, op, $3);
     } |
 
-    '-' Expr             
+    '-' Expr   %prec '!'          
     {
         Operator *op = new Operator(@1, "-");
         $$ = new ArithmeticExpr(op, $2);
