@@ -102,7 +102,7 @@ void Case::PrintChildren(int indentLevel) {
 }
 
 
-Default::Default(List<Stmt*> *s) {
+Default::Default(List<Stmt*> *s): Case() {
     (stmts=s)->SetParentAll(this);
 }
 

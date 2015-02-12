@@ -145,6 +145,13 @@ class AssignExpr : public CompoundExpr
     const char *GetPrintNameForNode() { return "AssignExpr"; }
 };
 
+class PostfixExpr : public CompoundExpr
+{
+  public: 
+    PostfixExpr(Operator *op, Expr *rhs) : CompoundExpr(op,rhs) {}
+    const char *GetPrintNameForNode() { return "PostfixExpr";} 
+};
+
 class LValue : public Expr 
 {
   public:

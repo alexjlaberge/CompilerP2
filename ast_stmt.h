@@ -148,12 +148,13 @@ class Case : public Stmt
     List<Stmt*> *stmts;
     IntConstant *intConst;
   public:
+    Case() {}
     Case(IntConstant *i, List<Stmt*> *s);
     const char *GetPrintNameForNode() { return "Case"; }
     void PrintChildren(int indentLevel);
 };
 
-class Default : public Stmt
+class Default : public Case
 {
   protected:
     List<Stmt*> *stmts;

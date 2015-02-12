@@ -19,8 +19,7 @@
 #include "scanner.h" // for yylex
 #include "parser.h"
 #include "errors.h"
-class Case;
-class Default;
+
 void yyerror(const char *msg); // standard error-handling routine
 
 %}
@@ -151,6 +150,7 @@ void yyerror(const char *msg); // standard error-handling routine
 %type <switchStmt> SwitchStmt
 %type <caseList> CaseBlock
 %type <intC> IntConstant
+%type <expr> PostfixExpr
 %%
 /* Rules
  * -----
@@ -345,6 +345,7 @@ CompoundExpr : EqualityExpr         {$$=$1;}
 			 | ArithmeticExpr	    {$$=$1;}
 			 | LogicalExpr			{$$=$1;}
 			 | AssignExpr			{$$=$1;}
+			 | PostfixExpr 			{$$=$1;}
 			 ;
 
 AssignExpr : LValue '=' Expr        {
@@ -378,6 +379,16 @@ ArithmeticExpr: Expr '+' Expr 		{
 										$$ = new ArithmeticExpr(op, $2);
 									}
 			  ;
+
+PostfixExpr: Expr T_Increm 			{
+                                        Operator *op = new Operator(@2, "++");
+                                        $$ = new PostfixExpr(op, $1);
+                                    }
+           | Expr T_Increm 			{
+                                        Operator *op = new Operator(@2, "--");
+                                        $$ = new PostfixExpr(op, $1);
+                                    }
+           ;
 
 RelationalExpr: Expr '>' Expr 				{
 												Operator *op = new Operator(@2, ">");
