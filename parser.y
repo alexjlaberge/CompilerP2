@@ -104,13 +104,13 @@ void yyerror(const char *msg); // standard error-handling routine
  * pp2: You'll need to add many of these of your own.
  */
 %nonassoc '='
-%left T_Or
+%left T_Or 
 %left T_And
 %nonassoc T_Equal T_NotEqual
 %nonassoc '<' '>' T_GreaterEqual T_LessEqual
 %left '+' //'-'?
 %left '*' '/' '%'
-%left '!' '-'
+%left '!' '-' T_Increm T_Decrem //Should T_Increm and T_Decrem be in here?
 %nonassoc '[' '.'
 %nonassoc No_Else
 %nonassoc T_Else
@@ -306,6 +306,26 @@ ClassDecl :
     T_Class Identifier '{' FieldList '}'    
     {
         $$ = new ClassDecl($2, NULL, new List<NamedType*>, $4);
+    } |
+
+    T_Class Identifier T_Extends NamedType '{' '}'    
+    {
+        $$ = new ClassDecl($2, $4, new List<NamedType*>, new List<Decl*>);
+    } |
+
+    T_Class Identifier T_Implements NamedTypeList '{' '}'    
+    {
+        $$ = new ClassDecl($2, NULL, $4, new List<Decl*>);
+    } |
+
+    T_Class Identifier T_Extends NamedType T_Implements NamedTypeList '{''}'    
+    {
+        $$ = new ClassDecl($2, $4, $6, new List<Decl*>);
+    } |
+
+    T_Class Identifier '{' '}'    
+    {
+        $$ = new ClassDecl($2, NULL, new List<NamedType*>, new List<Decl*>);
     };
 
 
@@ -318,11 +338,6 @@ FieldList :
     Field 
     {
         ($$ = new List<Decl*>)->Append($1);
-    } |
-    
-    /*Empty*/
-    {
-        $$ = new List<Decl*>;
     };
 
 Field:    
@@ -410,7 +425,7 @@ StmtBlock:
     {
         $$= new StmtBlock(new List<VarDecl*>, $2);
     } |
-    
+
     '{' '}'                 
     {
         $$= new StmtBlock(new List<VarDecl*>, new List<Stmt*>);
