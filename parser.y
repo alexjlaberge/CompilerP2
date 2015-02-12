@@ -19,7 +19,8 @@
 #include "scanner.h" // for yylex
 #include "parser.h"
 #include "errors.h"
-
+class Case;
+class Default;
 void yyerror(const char *msg); // standard error-handling routine
 
 %}
@@ -64,9 +65,10 @@ void yyerror(const char *msg); // standard error-handling routine
     NamedType *namedType;
     PrintStmt *printStmt;
     List<Case*> *caseList;
-    Case *case;
-    Default *default;
+    Case *c;
+    Default *def;
     SwitchStmt *switchStmt;
+    IntConstant *intC;
 }
 
 
@@ -144,10 +146,11 @@ void yyerror(const char *msg); // standard error-handling routine
 %type <expr> AssignExpr
 %type <declList> PrototypeList
 %type <caseList> CaseList
-%type <default> Default
-%type <case> Case
+%type <def> Default
+%type <c> Case
 %type <switchStmt> SwitchStmt
 %type <caseList> CaseBlock
+%type <intC> IntConstant
 %%
 /* Rules
  * -----
@@ -277,7 +280,7 @@ CaseList: CaseList Case {($$=$1)->Append($2);}
         | Case {($$ = new List<Case*>)->Append($1);}
         ;
 
-Case: T_Case T_IntConstant ':' StmtList {$$ = new Case($2, $4);}
+Case: T_Case IntConstant ':' StmtList {$$ = new Case($2, $4);}
 	;
 
 Default : T_Default ':' StmtList {$$ = new Default($3);}
@@ -315,7 +318,7 @@ ForStmt : T_For '(' Expr ';' Expr ';' Expr ')' Stmt         {$$= new ForStmt($3,
         | T_For '(' ';' Expr ';' ')' Stmt         {$$= new ForStmt(new EmptyExpr(), $4, new EmptyExpr(), $7);}
 		  ;
 
-Expr 	  : T_IntConstant 			{$$= new IntConstant(@1,$1);}
+Expr 	  : IntConstant 			{$$=$1;}
 		  | T_DoubleConstant 		{$$= new DoubleConstant(@1,$1);}
 		  | T_BoolConstant  		{$$= new BoolConstant(@1,$1);}
 		  | T_StringConstant  		{$$= new StringConstant(@1, $1);}
@@ -331,6 +334,8 @@ Expr 	  : T_IntConstant 			{$$= new IntConstant(@1,$1);}
 		  | T_New '(' NamedType ')' {$$ = new NewExpr(@1, $3);}
  		  ;
 
+IntConstant: T_IntConstant {$$= new IntConstant(@1,$1);}
+			;
 
 ExprList  : ExprList ',' Expr       {($$=$1)->Append($3);}
           | Expr                    {($$ = new List<Expr*>)->Append($1);}

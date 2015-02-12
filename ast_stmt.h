@@ -20,6 +20,9 @@ class Decl;
 class VarDecl;
 class Expr;
 class IntConstant;
+class Case;
+class Default;
+class SwitchStmt;
   
 class Program : public Node
 {
@@ -128,6 +131,17 @@ class PrintStmt : public Stmt
     void PrintChildren(int indentLevel);
 };
 
+class SwitchStmt : public Stmt
+{
+  protected:
+    List<Case*> *cases;
+    Expr *expr;
+  public:
+    SwitchStmt(Expr *e, List<Case*> *c);
+    const char *GetPrintNameForNode() { return "SwitchStmt"; }
+    void PrintChildren(int indentLevel);
+};
+
 class Case : public Stmt
 {
   protected:
@@ -139,7 +153,7 @@ class Case : public Stmt
     void PrintChildren(int indentLevel);
 };
 
-class Default : public Case
+class Default : public Stmt
 {
   protected:
     List<Stmt*> *stmts;
@@ -149,16 +163,6 @@ class Default : public Case
     void PrintChildren(int indentLevel);
 };
 
-class SwitchStmt : public Stmt
-{
-  protected:
-    List<Case*> *cases;
-    Expr *expr;
-  public:
-    SwitchStmt(Expr *e, List<Case*> *c);
-    const char *GetPrintNameForNode() { return "SwitchStmt"; }
-    void PrintChildren(int indentLevel);
-};
 
 
 #endif
