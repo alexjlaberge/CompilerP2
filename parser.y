@@ -63,6 +63,10 @@ void yyerror(const char *msg); // standard error-handling routine
     StmtBlock *stmtBlock;
     NamedType *namedType;
     PrintStmt *printStmt;
+    List<Case*> *caseList;
+    Case *case;
+    Default *default;
+    SwitchStmt *switchStmt;
 }
 
 
@@ -139,6 +143,11 @@ void yyerror(const char *msg); // standard error-handling routine
 %type <expr> LogicalExpr
 %type <expr> AssignExpr
 %type <declList> PrototypeList
+%type <caseList> CaseList
+%type <default> Default
+%type <case> Case
+%type <switchStmt> SwitchStmt
+%type <caseList> CaseBlock
 %%
 /* Rules
  * -----
@@ -259,15 +268,20 @@ Stmt   	  : ConditionalStmt			{$$=$1;}
 		  ;
 
 SwitchStmt: T_Switch '(' Expr ')' CaseBlock {$$ = new SwitchStmt($3, $5);}
+		;
 
-CaseBlock: '{' CaseList Default '}'   {($$=$2)->append($3);}
+CaseBlock: '{' CaseList Default '}'   {($$=$2)->Append($3);}
+		;
 
 CaseList: CaseList Case {($$=$1)->Append($2);}
         | Case {($$ = new List<Case*>)->Append($1);}
+        ;
 
-Case: T_Case ':' StmtList {$$ = new Case($3);}
+Case: T_Case T_IntConstant ':' StmtList {$$ = new Case($2, $4);}
+	;
 
-Default : T_Default ':' StmtList {$$ = new Default();}
+Default : T_Default ':' StmtList {$$ = new Default($3);}
+		;
 
 PrintStmt : T_Print '(' ExprList ')' ';' {$$= new PrintStmt($3);}
 		  ;
@@ -286,6 +300,7 @@ ConditionalStmt	: IfStmt 			{$$=$1;}
 
 IfStmt	  : T_If '(' Expr ')' Stmt T_Else Stmt {$$ = new IfStmt($3, $5, $7);}
           | T_If '(' Expr ')' Stmt {$$ = new IfStmt($3, $5, NULL);}
+          ;
 
 LoopStmt  : WhileStmt 				{$$=$1;}
 		  | ForStmt 				{$$=$1;}

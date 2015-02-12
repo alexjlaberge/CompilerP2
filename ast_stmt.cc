@@ -84,35 +84,32 @@ void PrintStmt::PrintChildren(int indentLevel) {
     args->PrintAll(indentLevel+1, "(args) ");
 }
 
-class SwitchStmt : public Stmt
-{
-  protected:
-    List<Case*> *cases;
-    Expr *expr;
-  public:
-    SwitchStmt::SwitchStmt(Expr *e, List<Case*> *c);
-    const char* SwitchStmt::GetPrintNameForNode() { return "SwitchStmt"; }
-    void SwitchStmt::PrintChildren(int indentLevel);
+SwitchStmt::SwitchStmt(Expr *e, List<Case*> *c) {
+    (expr=e)->SetParent(this);
+    (cases=c)->SetParentAll(this);
 }
 
-class Case : public Stmt
-{
-  protected:
-    List<Stmt*> *stmts
-  public:
-    Case(List<Stmt*> s);
-    const char *GetPrintNameForNode() { return "Case"; }
-    void PrintChildren(int indentLevel);
+void SwitchStmt::PrintChildren(int indentLevel) {
+    expr->Print(indentLevel+1);
 }
 
-class Default : public Stmt
-{
-  protected:
-    List<Stmt*> *stmts
-  public:
-    SwitchS(List<Stmt*> s);
-    const char *GetPrintNameForNode() { return "Default"; }
-    void PrintChildren(int indentLevel);
+Case::Case(IntConstant *i, List<Stmt*> s) {
+    (intConst=i)->setParent(this);
+    (stmts=s)->SetParentAll(this);
 }
+
+void Case::PrintChildren(int indentLevel) {
+    stmts->PrintAll(indentLevel+1);
+}
+
+
+Default::Default(List<Stmt*> s) {
+    (stmts=s)->SetParentAll(this);
+}
+
+void Default::PrintChildren(int indentLevel) {
+    stmts->PrintAll(indentLevel+1);
+}
+
 
 
