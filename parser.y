@@ -160,6 +160,7 @@ void yyerror(const char *msg); // standard error-handling routine
 %type <caseList> CaseList
 %type <def> Default
 %type <c> Case
+%type <c> EmptyCase
 %type <switchStmt> SwitchStmt
 %type <caseList> CaseBlock
 %type <intC> IntConstant
@@ -509,6 +510,16 @@ CaseList:
         ($$=$1)->Append($2);
     } |
 
+    CaseList EmptyCase
+    {
+        ($$=$1)->Append($2);
+    } |
+
+    EmptyCase
+    {
+        ($$ = new List<Case*>)->Append($1);
+    } |
+
     Case 
     {
         ($$ = new List<Case*>)->Append($1);
@@ -518,6 +529,12 @@ Case:
     T_Case IntConstant ':' StmtList 
     {
         $$ = new Case($2, $4);
+    };
+
+EmptyCase:
+    T_Case IntConstant ':'
+    {
+        $$ = new Case($2, new List<Stmt*>());
     };
 
 Default: 

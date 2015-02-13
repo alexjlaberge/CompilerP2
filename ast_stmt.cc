@@ -91,16 +91,18 @@ SwitchStmt::SwitchStmt(Expr *e, List<Case*> *c) {
 
 void SwitchStmt::PrintChildren(int indentLevel) {
     expr->Print(indentLevel+1);
+    cases->PrintAll(indentLevel+1);
 }
 
 Case::Case(IntConstant *i, List<Stmt*> *s) {
+    intConst = i;
     (stmts=s)->SetParentAll(this);
 }
 
 void Case::PrintChildren(int indentLevel) {
+    intConst->Print(indentLevel+1);
     stmts->PrintAll(indentLevel+1);
 }
-
 
 Default::Default(List<Stmt*> *s): Case() {
     (stmts=s)->SetParentAll(this);
