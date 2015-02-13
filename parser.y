@@ -109,9 +109,9 @@ void yyerror(const char *msg); // standard error-handling routine
 %left T_And
 %nonassoc T_Equal T_NotEqual
 %nonassoc '<' '>' T_GreaterEqual T_LessEqual
-%left '+' //'-'?
+%left '+' '-'
 %left '*' '/' '%'
-%left '!' '-' T_Increm T_Decrem //Should T_Increm and T_Decrem be in here?
+%left '!' T_Increm T_Decrem //Should T_Increm and T_Decrem be in here?
 %nonassoc '[' '.'
 %nonassoc No_Else
 %nonassoc T_Else
@@ -737,18 +737,6 @@ AssignExpr:
     };
 
 ArithmeticExpr: 
-    Expr '+' Expr         
-    {
-        Operator *op = new Operator(@2, "+");
-        $$ = new ArithmeticExpr($1, op, $3);
-    } |
-
-    Expr '-' Expr  %prec '+'      
-    {
-        Operator *op = new Operator(@2, "-");
-        $$ = new ArithmeticExpr($1, op, $3);
-    } |
-
     Expr '*' Expr         
     {
         Operator *op = new Operator(@2, "*");
@@ -764,6 +752,18 @@ ArithmeticExpr:
     Expr '%' Expr      
     {
         Operator *op = new Operator(@2, "%");
+        $$ = new ArithmeticExpr($1, op, $3);
+    } |
+
+    Expr '+' Expr         
+    {
+        Operator *op = new Operator(@2, "+");
+        $$ = new ArithmeticExpr($1, op, $3);
+    } |
+
+    Expr '-' Expr      
+    {
+        Operator *op = new Operator(@2, "-");
         $$ = new ArithmeticExpr($1, op, $3);
     } |
 
