@@ -502,7 +502,13 @@ CaseBlock:
     '{' CaseList Default '}'   
     {
         ($$=$2)->Append($3);
+    } |
+
+    '{' CaseList '}'   
+    {
+        ($$=$2);
     };
+
 
 CaseList: 
     CaseList Case 
