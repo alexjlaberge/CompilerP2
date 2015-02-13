@@ -68,6 +68,7 @@ void yyerror(const char *msg); // standard error-handling routine
     Default *def;
     SwitchStmt *switchStmt;
     IntConstant *intC;
+    PostfixExpr *postExpr;
 }
 
 
@@ -162,7 +163,7 @@ void yyerror(const char *msg); // standard error-handling routine
 %type <switchStmt> SwitchStmt
 %type <caseList> CaseBlock
 %type <intC> IntConstant
-%type <expr> PostfixExpr
+%type <postExpr> PostfixExpr
 %%
 /* Rules
  * -----
