@@ -1,0 +1,9 @@
+class a 
+{
+	void myFunc(int q, double p)
+	{
+		p = p + (p && (!q));
+		p = q++;
+		return (((p++)));
+	}
+}

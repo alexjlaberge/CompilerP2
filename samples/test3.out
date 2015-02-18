@@ -1,0 +1,22 @@
+
+   Program: 
+  1   FnDecl: 
+         (return type) Type: void
+  1      Identifier: main
+         (body) StmtBlock: 
+  3         FieldAccess: 
+  3            DoubleConstant: 1
+  3            Identifier: a
+  4         AssignExpr: 
+  4            FieldAccess: 
+  4               Identifier: y
+  4            Operator: =
+  4            ArithmeticExpr: 
+  4               FieldAccess: 
+  4                  Identifier: x
+  4               Operator: *
+  4               AssignExpr: 
+  4                  FieldAccess: 
+  4                     Identifier: x
+  4                  Operator: =
+  4                  IntConstant: 5

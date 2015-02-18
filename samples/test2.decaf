@@ -1,0 +1,8 @@
+void myFunc()
+{
+	a = b = c;
+	if(a > b > c)
+	{
+		Print("Testing");
+	}
+}

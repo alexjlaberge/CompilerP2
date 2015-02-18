@@ -262,11 +262,6 @@ Type:
         $$ = new Type("null");
     } |
 
-    T_Void 
-    {
-        $$ = new Type("void");
-    } |
-
     NamedType 
     {
         $$ = $1;
@@ -392,12 +387,25 @@ Prototype:
     Type Identifier '(' Formals ')' ';' 
     {
         $$ = new FnDecl($2, $1, $4);
+    } |
+
+    T_Void Identifier '(' Formals ')' ';' 
+    {
+        Type *ty = new Type("void");
+        $$ = new FnDecl($2, ty, $4);
     };
 
 FnDecl:    
     Type T_Identifier '(' Formals ')' StmtBlock        
     { 
         $$ = new FnDecl(new Identifier(@2,$2), $1, $4); 
+        $$->SetFunctionBody($6);
+    } |
+   
+    T_Void T_Identifier '(' Formals ')' StmtBlock        
+    { 
+        Type* ty = new Type("void");
+        $$ = new FnDecl(new Identifier(@2,$2), ty, $4); 
         $$->SetFunctionBody($6);
     };
 
