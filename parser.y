@@ -365,6 +365,11 @@ InterfaceDecl:
     T_Interface Identifier '{' PrototypeList '}' 
     {
         $$ = new InterfaceDecl($2, $4);
+    } |
+
+    T_Interface Identifier '{' '}' 
+    {
+        $$ = new InterfaceDecl($2, new List<Decl*>);
     };
 
 PrototypeList: 
