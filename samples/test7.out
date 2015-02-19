@@ -1,0 +1,10 @@
+
+   Program: 
+  1   FnDecl: 
+         (return type) Type: int
+  1      Identifier: main
+         (body) StmtBlock: 
+            WhileStmt: 
+  3            (test) FieldAccess: 
+  3               Identifier: x
+               (body) Empty: 

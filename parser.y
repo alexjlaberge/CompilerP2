@@ -490,6 +490,11 @@ Stmt:
         $$=$1;
     } |
 
+    ';'
+    {
+        $$ = new EmptyExpr();
+    } |
+
     StmtBlock               
     {
         $$ = $1;
