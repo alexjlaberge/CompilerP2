@@ -257,11 +257,6 @@ Type:
         $$ = new Type("string");
     } |
 
-    T_Null 
-    {
-        $$ = new Type("null");
-    } |
-
     NamedType 
     {
         $$ = $1;
